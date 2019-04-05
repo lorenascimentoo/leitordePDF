@@ -13,7 +13,7 @@ import org.apache.pdfbox.text.PDFTextStripperByArea;
 
 public class LeitorPDF {
 	public static void main(String[] args) throws IOException{
-		File file = new File("C:\\Users\\loren\\eclipse-workspace\\apache_lucene\\dados-lucene\\frmVisualizarBula.pdf");
+		File file = new File("C:\\Users\\loren\\eclipse-workspace\\apache_lucene\\dados-lucene\\AAS_Infantil.pdf");
 		
 		try (PDDocument document = PDDocument.load(file)){
 			if(!document.isEncrypted()) {
@@ -24,8 +24,6 @@ public class LeitorPDF {
 				PDFTextStripper tStripper = new PDFTextStripper();
 				String pdfFileInText = tStripper.getText(document);
 				
-				
-				
 				List<String> dados = getBulasInfo(pdfFileInText);
 			   	
 				String nomeComercial = dados.get(0);
@@ -35,13 +33,16 @@ public class LeitorPDF {
 				List<String> texto = getIndicacoes(pdfFileInText);
 				String indicacoes = texto.get(0);
 				String contraIndicacoes = texto.get(1);
+				String reacoesAdversas= texto.get(2);
 				
-				System.out.println("NOME COMERCIAL " +nomeComercial);
-				System.out.println("PRINCIPIO ATIVO " +principioAtivo);
-				System.out.println("FABRICANTE " +fabricante);
+				System.out.println("NOME COMERCIAL: " +nomeComercial);
+				System.out.println("PRINCIPIO ATIVO: " +principioAtivo);
+				System.out.println("FABRICANTE: " +fabricante);
 				System.out.println(indicacoes);
 				System.out.println(contraIndicacoes);
-				System.out.println(texto);
+				System.out.println(reacoesAdversas);
+				
+				System.out.println("Funcionou!!!");
 			}
 		}
 	}
@@ -71,7 +72,7 @@ public class LeitorPDF {
 	public static List<String> getIndicacoes(String pdfFileInText) {
 		
 		String p = pdfFileInText.replaceAll("\r\n", "");
-		p = p.replaceAll("  ", "\n");
+		p = p.replaceAll("  ", "\n").replace("?", ":");
 		//Leitura linha a linha que gera o arquivo sem os espaços em branco
 		Scanner scn = null;					
 		scn = new Scanner(p);
@@ -89,20 +90,52 @@ public class LeitorPDF {
 		scn.close();
 		
 		List<String> inf = new ArrayList<String>();
-		
-		for(String line: textoExtraido) {
-			if(line.contains("INDICA")) {
-				inf.add(line);
-			} else if(line.contains("REAÇ")){
-				inf.add(line);
+		List<String> indicacao = new ArrayList<String>();
+		List<String> contraIndicacao = new ArrayList<String>();
+		List<String> reacaoAdversa = new ArrayList<String>();
+		for(int i=0;i<textoExtraido.size();i++) {
+			String line = textoExtraido.get(i);
+			if(line.contains("PARA")) {
+				int j = i;
+				while(!textoExtraido.get(j).contains("NÃO")) {
+					indicacao.add(textoExtraido.get(j));
+					j++;
+				}
+			} else if(line.contains("NÃO")){
+				int j = i;
+				while(!textoExtraido.get(j).contains("SABER")) {
+					contraIndicacao.add(textoExtraido.get(j));
+					j++;
+					}
+				
+			}else if(line.contains("MALES")){
+				int j = i;
+				while(!textoExtraido.get(j).contains("QUANTIDADE")) {
+					reacaoAdversa.add(textoExtraido.get(j));
+					j++;
+					}
 			}
+
 		}
-	
+		
+		String dadoInd = getString(indicacao); 
+		String dadoContraInd = getString(contraIndicacao);
+		String dadoReacAdv = getString(reacaoAdversa);
+		
+		
+		inf.add(dadoInd);
+		inf.add(dadoContraInd);
+		inf.add(dadoReacAdv);
+		
 		
 		return inf;
 	}
 	
-	
+	public static String getString(List<String> lista) {
+		String dado = lista.toString();
+		dado = dado.replaceAll("\\d.", "");
+		return dado;
+	}
 	
 	
 	
